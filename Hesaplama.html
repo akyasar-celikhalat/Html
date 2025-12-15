@@ -137,7 +137,7 @@
             <input type="text" id="d" placeholder="D" oninput="formatNumber(this)" onkeypress="handleEnter(event)">
         </div>
         <button onclick="calculate()">Hesapla</button>
-        <div class="result" id="result"></div>
+        <div class="result" id="ratioResult"></div>
     </div>
 
     <!-- Çelik Tel Hesaplayıcı Sekmesi -->
@@ -158,7 +158,7 @@
         <div class="instruction">
             Herhangi iki değeri girin, üçüncü değer otomatik hesaplanacaktır.
         </div>
-        <div class="result" id="result"></div>
+        <div class="result" id="telResult"></div>
     </div>
 
     <!-- 1 Metre Tel Ağırlığı Sekmesi -->
@@ -239,7 +239,7 @@
                 resultText = `A = ${aValue.toFixed(2)}`;
             }
 
-            document.getElementById('result').innerText = resultText || "Lütfen eksik değeri hesaplamak için gerekli değerleri girin.";
+            document.getElementById('ratioResult').innerText = resultText || "Lütfen eksik değeri hesaplamak için gerekli değerleri girin.";
         }
 
         // Çelik Tel Hesaplayıcı Fonksiyonları

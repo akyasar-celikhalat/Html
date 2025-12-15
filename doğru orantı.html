@@ -12,12 +12,12 @@
         <h2>Doğru Orantı Hesaplama</h2>
         <!-- Orantı hesaplama için eski kodlar aynen kalıyor -->
         <div class="row">
-            <input type="text" id="a" placeholder="A" oninput="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')"> / 
-            <input type="text" id="b" placeholder="B" oninput="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')">
+            <input type="text" id="a" placeholder="A" onblur="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')"> / 
+            <input type="text" id="b" placeholder="B" onblur="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')">
         </div>
         <div class="row">
-            <input type="text" id="c" placeholder="C" oninput="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')"> / 
-            <input type="text" id="d" placeholder="D" oninput="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')">
+            <input type="text" id="c" placeholder="C" onblur="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')"> / 
+            <input type="text" id="d" placeholder="D" onblur="formatNumber(this)" onkeypress="handleEnter(event, 'ratioForm')">
         </div>
         <button onclick="calculateRatio()">Hesapla</button>
         <div class="result" id="ratioResult"></div>
@@ -29,29 +29,40 @@
         <h2>Çevrim Katsayısı</h2>
         <!-- Yeni çap hesaplama formu -->
         <div class="row">
-            <input type="text" id="inputCap" placeholder="Giriş Çapı">
+            <input type="text" id="inputCap" placeholder="Giriş Çapı" oninput="calculateCap()" onkeypress="handleEnter(event, 'capForm')">
         </div>
         <div class="row">
-            <input type="text" id="outputCap" placeholder="Çıkış Çapı">
+            <input type="text" id="outputCap" placeholder="Çıkış Çapı" oninput="calculateCap()" onkeypress="handleEnter(event, 'capForm')">
         </div>
         <button onclick="calculateCap()">Hesapla</button>
         <div class="result" id="capResult"></div>
     </div>
 
     <script>
-        // Sayıları binlik ayraçlı hale getirir (sadece orantı formu için)
+        // Yardımcı: kullanıcı girdisini normalize edip sayıya çevirir
+        function parseInputNumberFromId(id) {
+            const el = document.getElementById(id);
+            if (!el) return NaN;
+            const str = el.value.trim().replace(/\./g, "").replace(/,/g, ".");
+            const num = parseFloat(str);
+            return isNaN(num) ? NaN : num;
+        }
+
+        // Yardımcı: sayıyı yerel formatta inputa yazar
+        function formatOutputNumberToInput(id, num, digits = 2) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (isNaN(num)) el.value = '';
+            else el.value = num.toLocaleString('tr-TR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        }
+
+        // input blur olduğunda çalışacak basit formatlayıcı (caret koruması basitçe blur ile sağlanır)
         function formatNumber(input) {
-            let value = input.value.replace(/\./g, "").replace(/,/g, "."); // Varolan ayraçları kaldır
-            if (value !== "" && !isNaN(value)) {
-                let num = parseFloat(value);
-                if (!isNaN(num)) {
-                    input.value = num.toLocaleString("tr-TR");
-                } else {
-                    input.value = "";
-                }
-            } else {
-                input.value = "";
-            }
+            const value = input.value.trim().replace(/\./g, '').replace(/,/g, '.');
+            if (value === '') { input.value = ''; return; }
+            const n = parseFloat(value);
+            if (isNaN(n)) { input.value = ''; return; }
+            input.value = n.toLocaleString('tr-TR');
         }
 
         // Enter tuşuyla ilgili formu çalıştır
@@ -60,41 +71,41 @@
                 if (formName === 'ratioForm') {
                     calculateRatio();
                 } else if (formName === 'capForm') {
-                    calculateCap(); // Burada da aynı fonksiyonu çağırıyoruz
+                    calculateCap();
                 }
             }
         }
 
         // Doğru Orantı Hesabı
         function calculateRatio() {
-            const a = parseFloat(document.getElementById('a').value.replace(/\./g, "").replace(/,/g, "."));
-            const b = parseFloat(document.getElementById('b').value.replace(/\./g, "").replace(/,/g, "."));
-            const c = parseFloat(document.getElementById('c').value.replace(/\./g, "").replace(/,/g, "."));
-            const d = parseFloat(document.getElementById('d').value.replace(/\./g, "").replace(/,/g, "."));
+            const a = parseInputNumberFromId('a');
+            const b = parseInputNumberFromId('b');
+            const c = parseInputNumberFromId('c');
+            const d = parseInputNumberFromId('d');
 
             let resultText = "";
 
             if (!isNaN(a) && !isNaN(b) && !isNaN(c)) {
                 const dValue = (b * c) / a;
-                document.getElementById('d').value = dValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                formatOutputNumberToInput('d', dValue, 2);
                 resultText = `D = ${dValue.toFixed(2)}`;
             }
 
             if (!isNaN(a) && !isNaN(b) && !isNaN(d)) {
                 const cValue = (a * d) / b;
-                document.getElementById('c').value = cValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                formatOutputNumberToInput('c', cValue, 2);
                 resultText = `C = ${cValue.toFixed(2)}`;
             }
 
             if (!isNaN(c) && !isNaN(d) && !isNaN(a)) {
                 const bValue = (a * d) / c;
-                document.getElementById('b').value = bValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                formatOutputNumberToInput('b', bValue, 2);
                 resultText = `B = ${bValue.toFixed(2)}`;
             }
 
             if (!isNaN(c) && !isNaN(d) && !isNaN(b)) {
                 const aValue = (b * c) / d;
-                document.getElementById('a').value = aValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                formatOutputNumberToInput('a', aValue, 2);
                 resultText = `A = ${aValue.toFixed(2)}`;
             }
 
@@ -103,20 +114,9 @@
 
         // Çap Hesaplama - Artık ondalıklı sayıları kabul eder
         function calculateCap() {
-            // Kullanıcının girdiği metni al
-            const inputCapValueStr = document.getElementById('inputCap').value.trim();
-            const outputCapValueStr = document.getElementById('outputCap').value.trim();
+            const inputCap = parseInputNumberFromId('inputCap');
+            const outputCap = parseInputNumberFromId('outputCap');
 
-            // Türkçe yerelinde virgülle ayrılmış ondalık sayıları desteklemek için
-            // virgülü noktayla değiştiriyoruz
-            const inputCapValueNormalized = inputCapValueStr.replace(/,/g, ".");
-            const outputCapValueNormalized = outputCapValueStr.replace(/,/g, ".");
-
-            // parseFloat ile sayıya çeviriyoruz
-            const inputCap = parseFloat(inputCapValueNormalized);
-            const outputCap = parseFloat(outputCapValueNormalized);
-
-            // NaN kontrolü
             if (isNaN(inputCap) || isNaN(outputCap)) {
                 document.getElementById('capResult').innerText = "Lütfen geçerli giriş ve çıkış çapı değerleri girin (örn. 7,5 ya da 6.2).";
                 return;
@@ -127,15 +127,10 @@
                 return;
             }
 
-            // İstenen işlemi yap
-            // 100.000 / giriş çapı / giriş çapı
             const step1 = 100000 / inputCap / inputCap;
-            // Sonuç * çıkış çapı * çıkış çapı
             const result = step1 * outputCap * outputCap;
-            // Yuvarla
             const roundedResult = Math.round(result);
 
-            // Sonucu göster (binlik ayraçla)
             document.getElementById('capResult').innerText = `Sonuç: ${roundedResult.toLocaleString("tr-TR")}`;
         }
     </script>
