@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çoklu Hesaplama Araçları</title>
+    <style>
+        /* Mevcut stil dosyanız */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 24px;
+            color: #d9282f;
+            margin-bottom: 20px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 45%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #d9282f;
+        }
+
+        .instruction {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Sekmeler için ek stil */
+        .tab {
+            overflow: hidden;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 12px 16px;
+            transition: 0.3s;
+            font-size: 16px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab button:hover {
+            background-color: #f1f1f1;
+        }
+
+        .tab button.active {
+            border-bottom: 2px solid #007BFF;
+            font-weight: bold;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 0;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sekmeler -->
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'oran')">Doğru Orantı Hesaplama</button>
+        <button class="tablinks" onclick="openTab(event, 'tel')">Çelik Tel Hesaplayıcı</button>
+        <button class="tablinks" onclick="openTab(event, 'cap')">1 Metre Tel Ağırlığı</button>
+    </div>
+
+    <!-- Doğru Orantı Hesaplama Sekmesi -->
+    <div id="oran" class="tabcontent container">
+        <h2>Doğru Orantı Hesaplama</h2>
+        <div class="row">
+            <input type="text" id="a" placeholder="A" oninput="formatNumber(this)" onkeypress="handleEnter(event)"> / 
+            <input type="text" id="b" placeholder="B" oninput="formatNumber(this)" onkeypress="handleEnter(event)">
+        </div>
+        <div class="row">
+            <input type="text" id="c" placeholder="C" oninput="formatNumber(this)" onkeypress="handleEnter(event)"> / 
+            <input type="text" id="d" placeholder="D" oninput="formatNumber(this)" onkeypress="handleEnter(event)">
+        </div>
+        <button onclick="calculate()">Hesapla</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <!-- Çelik Tel Hesaplayıcı Sekmesi -->
+    <div id="tel" class="tabcontent container">
+        <h2>Çelik Tel Hesaplayıcı</h2>
+        <div class="row">
+            <label>Çap (mm):</label>
+            <input type="number" id="diameter" placeholder="Örn: 2.5" step="0.1">
+        </div>
+        <div class="row">
+            <label>Uzunluk (m):</label>
+            <input type="number" id="length" placeholder="Örn: 100" step="0.1">
+        </div>
+        <div class="row">
+            <label>Ağırlık (kg):</label>
+            <input type="number" id="weight" placeholder="Örn: 3.85" step="0.001">
+        </div>
+        <div class="instruction">
+            Herhangi iki değeri girin, üçüncü değer otomatik hesaplanacaktır.
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <!-- 1 Metre Tel Ağırlığı Sekmesi -->
+    <div id="cap" class="tabcontent container">
+        <h2>1 Metre Tel Ağırlığı</h2>
+        <div class="row">
+            <label>Çap (mm):</label>
+            <input type="number" id="capInput" placeholder="Örn: 6" step="0.1">
+        </div>
+        <button onclick="calculateWeightByDiameter()">Hesapla</button>
+        <div class="result" id="capResult"></div>
+    </div>
+
+    <script>
+        // Sekmeleri açma fonksiyonu
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // İlk sekmeyi varsayılan olarak aç
+        document.getElementsByClassName("tablinks")[0].click();
+
+        // Doğru Orantı Hesaplama Fonksiyonları
+        function formatNumber(input) {
+            let value = input.value.replace(/\./g, "");
+            if (!isNaN(value)) {
+                value = parseFloat(value);
+                input.value = value.toLocaleString("tr-TR");
+            } else {
+                input.value = "";
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === "Enter") {
+                calculate();
+            }
+        }
+
+        function calculate() {
+            const a = parseFloat(document.getElementById('a').value.replace(/\./g, ""));
+            const b = parseFloat(document.getElementById('b').value.replace(/\./g, ""));
+            const c = parseFloat(document.getElementById('c').value.replace(/\./g, ""));
+            const d = parseFloat(document.getElementById('d').value.replace(/\./g, ""));
+            let resultText = "";
+
+            if (!isNaN(a) && !isNaN(b) && !isNaN(c)) {
+                const dValue = (b * c) / a;
+                document.getElementById('d').value = dValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                resultText = `D = ${dValue.toFixed(2)}`;
+            }
+
+            if (!isNaN(a) && !isNaN(b) && !isNaN(d)) {
+                const cValue = (a * d) / b;
+                document.getElementById('c').value = cValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                resultText = `C = ${cValue.toFixed(2)}`;
+            }
+
+            if (!isNaN(c) && !isNaN(d) && !isNaN(a)) {
+                const bValue = (a * d) / c;
+                document.getElementById('b').value = bValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                resultText = `B = ${bValue.toFixed(2)}`;
+            }
+
+            if (!isNaN(c) && !isNaN(d) && !isNaN(b)) {
+                const aValue = (b * c) / d;
+                document.getElementById('a').value = aValue.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                resultText = `A = ${aValue.toFixed(2)}`;
+            }
+
+            document.getElementById('result').innerText = resultText || "Lütfen eksik değeri hesaplamak için gerekli değerleri girin.";
+        }
+
+        // Çelik Tel Hesaplayıcı Fonksiyonları
+        const STEEL_DENSITY = 7.85;
+
+        function calculateWeight(diameter, length) {
+            const w = (Math.PI * Math.pow(diameter / 2, 2) * length * STEEL_DENSITY / 1000);
+            return Math.round(w * 100) / 100;
+        }
+
+        function calculateLength(diameter, weight) {
+            const l = ((weight * 1000) / (Math.PI * Math.pow(diameter / 2, 2) * STEEL_DENSITY));
+            return Math.round(l * 100) / 100;
+        }
+
+        function calculateDiameter(length, weight) {
+            const d = Math.sqrt((weight * 1000) / (Math.PI * length * STEEL_DENSITY)) * 2;
+            return Math.round(d * 100) / 100;
+        }
+
+        function handleInputChange(e) {
+            const currentInput = e.target;
+            const currentValue = currentInput.value;
+
+            if (!currentValue) {
+                if (currentInput !== diameterInput) diameterInput.value = '';
+                if (currentInput !== lengthInput) lengthInput.value = '';
+                if (currentInput !== weightInput) weightInput.value = '';
+                return;
+            }
+
+            const hasDiameter = diameterInput.value !== '';
+            const hasLength = lengthInput.value !== '';
+            const hasWeight = weightInput.value !== '';
+
+            if (currentInput === diameterInput) {
+                if (hasLength) weightInput.value = calculateWeight(currentValue, lengthInput.value);
+                else if (hasWeight) lengthInput.value = calculateLength(currentValue, weightInput.value);
+            } else if (currentInput === lengthInput) {
+                if (hasDiameter) weightInput.value = calculateWeight(diameterInput.value, currentValue);
+                else if (hasWeight) diameterInput.value = calculateDiameter(currentValue, weightInput.value);
+            } else if (currentInput === weightInput) {
+                if (hasDiameter) lengthInput.value = calculateLength(diameterInput.value, currentValue);
+                else if (hasLength) diameterInput.value = calculateDiameter(lengthInput.value, currentValue);
+            }
+        }
+
+        const diameterInput = document.getElementById('diameter');
+        const lengthInput = document.getElementById('length');
+        const weightInput = document.getElementById('weight');
+
+        diameterInput.addEventListener('input', handleInputChange);
+        lengthInput.addEventListener('input', handleInputChange);
+        weightInput.addEventListener('input', handleInputChange);
+
+        // 1 Metre Tel Ağırlığı Hesaplama
+        function calculateWeightByDiameter() {
+            const diameter = parseFloat(document.getElementById('capInput').value);
+            if (isNaN(diameter) || diameter <= 0) {
+                document.getElementById('capResult').innerText = "Lütfen geçerli bir çap değeri girin.";
+                return;
+            }
+
+            // Ağırlık hesaplama formülü
+            const weight = (Math.PI * Math.pow(diameter / 2, 2) * 1 * 7.85 / 1000);
+
+            // Sonucu 4 ondalık basamağa yuvarla
+            const roundedWeight = weight.toFixed(4);
+
+            // Sonucu ekrana yazdır
+            document.getElementById('capResult').innerText = `1 metrelik telin ağırlığı: ${roundedWeight} kg`;
+        }
+    </script>
+</body>
+</html>
