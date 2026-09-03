@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kablo & Tel Hesaplamaları</title>
+  <!-- Lucide İkonları & Tailwind CSS -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --warning: #f59e0b;
+    }
+
+    /* Ekran Taşmasını Engelleyen Temel Sıfırlamalar */
+    *, *::before, *::after { 
+      box-sizing: border-box !important; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    }
+    
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden !important; /* Sağa taşmayı sıfırlar */
+      background-color: var(--bg); 
+      color: var(--text); 
+      padding-bottom: 75px; 
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-container { 
+      width: 100%; 
+      max-width: 500px; 
+      padding: 12px; 
+      box-sizing: border-box;
+    }
+
+    /* Header */
+    header { background: var(--primary); color: white; padding: 16px; border-radius: 12px; margin-bottom: 16px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+    header p { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+
+    /* Tab Content */
+    .tab-content { display: none; flex-direction: column; gap: 16px; width: 100%; }
+    .tab-content.active { display: flex; }
+
+    /* Cards & Form */
+    .card { background: var(--card-bg); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
+    .card-title { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 12px; border-bottom: 2px solid var(--bg); padding-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+
+    /* Taşmayı Önleyen Izgara Düzeni */
+    .grid-2 { 
+      display: grid; 
+      grid-template-columns: repeat(2, minmax(0, 1fr)); /* Taşmayan esnek sütunlar */
+      gap: 10px; 
+      width: 100%;
+    }
+
+    @media (max-width: 360px) {
+      .grid-2 { grid-template-columns: 1fr; } /* Çok küçük ekranlarda tek sütuna düşer */
+    }
+
+    .input-group { display: flex; flex-direction: column; gap: 4px; width: 100%; min-width: 0; }
+    label { font-size: 0.78rem; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* Girdilerin Taşmasını Kesin Olarak Engelleyen Kural */
+    input { 
+      width: 100% !important; 
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      padding: 10px; 
+      border: 1px solid var(--border); 
+      border-radius: 8px; 
+      font-size: 0.9rem; 
+      outline: none; 
+      transition: 0.2s; 
+    }
+    input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+    .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; margin-top: 6px; transition: 0.2s; }
+    .btn:hover { background: var(--primary-light); }
+
+    /* Output Styling */
+    .result-box { background: #eff6ff; border-left: 4px solid var(--primary-light); padding: 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; word-break: break-all; margin-top: 8px; }
+    .stat-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; color: white; }
+    .badge-ok { background: var(--success); }
+    .badge-warn { background: var(--warning); }
+
+    .check-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 0.82rem; gap: 8px; }
+    .check-item:last-child { border-bottom: none; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.82rem; }
+    th, td { padding: 8px 4px; text-align: center; border-bottom: 1px solid var(--border); }
+    th { background: #f1f5f9; color: var(--muted); font-weight: 600; }
+
+    /* Bottom Navigation */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 50; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: var(--muted); font-size: 0.75rem; font-weight: 600; cursor: pointer; padding: 4px 12px; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item i { width: 20px; height: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <h1>Tel & Hadde Hesaplamaları</h1>
+    <p>Hazırlayan: Yaşar AK</p>
+  </header>
+
+  <!-- TAB 1: HADDE SERİSİ -->
+  <div id="tab-hadde" class="tab-content active">
+    <div class="card">
+      <div class="card-title">
+        <i data-lucide="layers" class="w-5 h-5 text-blue-800"></i>
+        Hadde Serisi Hesabı
+      </div>
+      <div class="grid-2">
+        <div class="input-group">
+          <label for="h_giris">Giriş Çapı (mm)</label>
+          <input type="number" step="0.01" id="h_giris" value="5.50">
+        </div>
+        <div class="input-group">
+          <label for="h_cikis">Çıkış Çapı (mm)</label>
+          <input type="number" step="0.01" id="h_cikis" value="2.00">
+        </div>
+        <div class="input-group">
+          <label for="h_paso">Paso Sayısı</label>
+          <input type="number" id="h_paso" value="7">
+        </div>
+        <div class="input-group">
+          <label for="h_fark">Kesit Düşme Farkı (%)</label>
+          <input type="number" step="0.1" id="h_fark" value="4.0">
+        </div>
+      </div>
+      <button class="btn" onclick="hesaplaHadde()">Seri Bul & Kontrol Et</button>
+    </div>
+
+    <div id="h_sonuclar" style="display:none; flex-direction:column; gap:16px;">
+      <div class="card">
+        <div class="card-title">Hadde Çap Dizilimi</div>
+        <div class="result-box" id="h_res_seri">-</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Teknik Kontroller</div>
+        <div id="h_res_kontroller"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Passo Detay Tablosu</div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr><th>Paso</th><th>Çap (mm)</th><th>Kesit Düşümü (%)</th></tr>
+            </thead>
+            <tbody id="h_res_tablo"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: KOPMA YÜKÜ -->
+  <div id="tab-kopma" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <i data-lucide="activity" class="w-5 h-5 text-blue-800"></i>
+        Kopma Yükü Hesabı
+      </div>
+      <div class="input-group">
+        <label for="k_giris">Giriş Çapı (mm)</label>
+        <input type="number" step="0.01" id="k_giris" placeholder="Örn: 5.50">
+      </div>
+      <div class="input-group">
+        <label for="k_cikis">Çıkış Çapı (mm)</label>
+        <input type="number" step="0.01" id="k_cikis" placeholder="Örn: 2.00">
+      </div>
+      <div class="input-group">
+        <label for="k_filmasin">Filmaşin Kopması (kg/mm²)</label>
+        <input type="number" step="0.1" id="k_filmasin" placeholder="Örn: 42.0">
+      </div>
+      <button class="btn" onclick="hesaplaKopma()">Kopma Yükünü Hesapla</button>
+    </div>
+
+    <div id="k_sonuclar" class="card" style="display:none;">
+      <div class="card-title">Hesaplama Sonuçları</div>
+      <div class="result-box" id="k_res_mukavemet" style="margin-bottom:8px;"></div>
+      <div class="result-box" id="k_res_yuk"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: ÇELİK TEL HESAPLAYICI -->
+  <div id="tab-kilo" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <i data-lucide="calculator" class="w-5 h-5 text-blue-800"></i>
+        Çelik Tel Ağırlık / Uzunluk Hesaplayıcı
+      </div>
+
+      <div class="space-y-3 my-2">
+        <div class="flex items-center gap-2">
+          <label class="text-gray-700 font-medium w-28 text-xs">Çap (mm):</label>
+          <input
+            type="number"
+            id="diameter"
+            class="flex-1 rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring focus:ring-blue-500"
+            placeholder="Örn: 2.5"
+            step="0.01"
+          />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-gray-700 font-medium w-28 text-xs">Uzunluk (m):</label>
+          <input
+            type="number"
+            id="length"
+            class="flex-1 rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring focus:ring-blue-500"
+            placeholder="Örn: 100"
+            step="0.1"
+          />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-gray-700 font-medium w-28 text-xs">Ağırlık (kg):</label>
+          <input
+            type="number"
+            id="weight"
+            class="flex-1 rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring focus:ring-blue-500"
+            placeholder="Örn: 3.85"
+            step="0.001"
+          />
+        </div>
+      </div>
+
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+        <p class="text-xs font-semibold text-blue-900 leading-relaxed">
+          💡 Herhangi iki değeri girin, üçüncü değer anlık olarak otomatik hesaplanacaktır.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchTab('tab-hadde', this)">
+    <i data-lucide="layers"></i>
+    Hadde Serisi
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-kopma', this)">
+    <i data-lucide="activity"></i>
+    Kopma Yükü
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-kilo', this)">
+    <i data-lucide="calculator"></i>
+    Ağırlık / Uzunluk
+  </button>
+</nav>
+
+<script>
+  // Lucide ikonlarını yükle
+  lucide.createIcons();
+
+  // Tab Değiştirme Fonksiyonu
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // 1. Hadde Serisi Hesabı
+  function hesaplaHadde() {
+    const girisCapi = parseFloat(document.getElementById('h_giris').value);
+    const cikisCapi = parseFloat(document.getElementById('h_cikis').value);
+    const pasoSayisi = parseInt(document.getElementById('h_paso').value);
+    const kesitDusmeFarki = parseFloat(document.getElementById('h_fark').value);
+
+    if (!girisCapi || !cikisCapi || !pasoSayisi) {
+      alert("Lütfen geçerli değerler girin.");
+      return;
+    }
+
+    const baslangicKesiti = girisCapi * girisCapi * 0.785;
+    const nihayiKesit = cikisCapi * cikisCapi * 0.785;
+    const ortalamaDeformasyon = 100.0 * (1.0 - Math.pow(nihayiKesit / baslangicKesiti, 1.0 / pasoSayisi));
+    const toplamKesitDusmesi = (100.0 * (baslangicKesiti - nihayiKesit)) / baslangicKesiti;
+    const herHaddedeKesitDusmesi = 2.0 * ((kesitDusmeFarki / 2.0) / (pasoSayisi - 1.0));
+    const ilkCap = Math.sqrt((Math.pow(girisCapi / 2.0, 2.0) * Math.PI) / Math.PI) * 2.0;
+
+    let sabitKesitCap = [ilkCap], sabitKesitYuzde = [0.0];
+    for (let i = 1; i <= pasoSayisi; i++) {
+      sabitKesitCap[i] = Math.pow(((sabitKesitCap[i - 1] * sabitKesitCap[i - 1]) * (100.0 - ortalamaDeformasyon)) / 100.0, 0.5);
+      sabitKesitYuzde[i] = (100.0 * ((sabitKesitCap[i - 1] * sabitKesitCap[i - 1]) - (sabitKesitCap[i] * sabitKesitCap[i]))) / (sabitKesitCap[i - 1] * sabitKesitCap[i - 1]);
+    }
+
+    let azalanKesitYuzde = [0.0], azalanKesitAraDeger = [0.0], azalanKesitCap = [ilkCap];
+    for (let i = 1; i <= pasoSayisi; i++) {
+      if (i === 1) {
+        azalanKesitYuzde[i] = sabitKesitYuzde[i] + (kesitDusmeFarki / 2.0);
+        azalanKesitAraDeger[i] = (baslangicKesiti * (100.0 - azalanKesitYuzde[i])) / 100.0;
+      } else {
+        azalanKesitYuzde[i] = azalanKesitYuzde[i - 1] - herHaddedeKesitDusmesi;
+        azalanKesitAraDeger[i] = (azalanKesitAraDeger[i - 1] * (100.0 - azalanKesitYuzde[i])) / 100.0;
+      }
+      azalanKesitCap[i] = Math.pow(azalanKesitAraDeger[i] / 0.785, 0.5);
+    }
+
+    // Seri Özeti
+    let capDizilimi = [];
+    for (let i = 1; i <= pasoSayisi; i++) capDizilimi.push(azalanKesitCap[i].toFixed(2));
+    document.getElementById('h_res_seri').innerText = capDizilimi.join(" - ");
+
+    // Kontroller
+    const kontroller = [];
+    if (ortalamaDeformasyon < 18.0) kontroller.push({ label: "Ortalama Deformasyon", msg: "Hadde sayısı azaltılmalı", ok: false });
+    else if (ortalamaDeformasyon > 22.0) kontroller.push({ label: "Ortalama Deformasyon", msg: "Hadde sayısı artırılmalı", ok: false });
+    else kontroller.push({ label: "Ortalama Deformasyon", msg: "Hadde sayısı uygun", ok: true });
+
+    if (toplamKesitDusmesi > 92.0) kontroller.push({ label: "Toplam Kesit Düşümü", msg: "Giriş çapı azaltılmalı", ok: false });
+    else kontroller.push({ label: "Toplam Kesit Düşümü", msg: "Giriş çapı uygun", ok: true });
+
+    if (azalanKesitYuzde[2] > 26.0) kontroller.push({ label: "2. Passo Deformasyonu", msg: "Deformasyon farkı azaltılmalı", ok: false });
+    else kontroller.push({ label: "2. Passo Deformasyonu", msg: "Deformasyon farkı uygun", ok: true });
+
+    if (azalanKesitYuzde[pasoSayisi] < 15.0) kontroller.push({ label: "Son Passo Düşümü", msg: "İstenen kesit düşme farkı azaltılmalı", ok: false });
+    else kontroller.push({ label: "Son Passo Düşümü", msg: "İstenen kesit düşme farkı uygun", ok: true });
+
+    const kContainer = document.getElementById('h_res_kontroller');
+    kContainer.innerHTML = '';
+    kontroller.forEach(c => {
+      kContainer.innerHTML += `
+        <div class="check-item">
+          <span><strong>${c.label}:</strong> ${c.msg}</span>
+          <span class="stat-badge ${c.ok ? 'badge-ok' : 'badge-warn'}">${c.ok ? 'UYGUN' : 'UYARI'}</span>
+        </div>`;
+    });
+
+    // Tablo
+    const tContainer = document.getElementById('h_res_tablo');
+    tContainer.innerHTML = `<tr><td>0 (Giriş)</td><td>${girisCapi.toFixed(2)}</td><td>-</td></tr>`;
+    for (let i = 1; i <= pasoSayisi; i++) {
+      tContainer.innerHTML += `<tr><td><strong>${i}. Passo</strong></td><td>${azalanKesitCap[i].toFixed(2)}</td><td>% ${azalanKesitYuzde[i].toFixed(2)}</td></tr>`;
+    }
+
+    document.getElementById('h_sonuclar').style.display = 'flex';
+  }
+
+  // 2. Kopma Yükü Hesabı
+  function hesaplaKopma() {
+    const giris = parseFloat(document.getElementById('k_giris').value);
+    const cikis = parseFloat(document.getElementById('k_cikis').value);
+    const filmasin = parseFloat(document.getElementById('k_filmasin').value);
+
+    if (!giris || !cikis || !filmasin) {
+      alert("Lütfen tüm alanları doldurun.");
+      return;
+    }
+
+    const kopmaKg = Math.sqrt(giris / cikis) * filmasin;
+    const kopmaN = kopmaKg * Math.PI * (Math.pow(cikis, 2) / 4.0);
+
+    document.getElementById('k_res_mukavemet').innerText = "Kopma Mukavemeti: " + Math.round(kopmaKg) + " kg/mm²";
+    document.getElementById('k_res_yuk').innerText = "Kopma Yükü: " + Math.round(kopmaN) + " kgf";
+    document.getElementById('k_sonuclar').style.display = 'block';
+  }
+
+  // 3. Çelik Tel Çift Yönlü Dinamik Hesaplama Mantığı
+  const STEEL_DENSITY = 7.85;
+  const diameterInput = document.getElementById('diameter');
+  const lengthInput = document.getElementById('length');
+  const weightInput = document.getElementById('weight');
+
+  function calculateWeight(diameter, length) {
+    const d = parseFloat(diameter);
+    const l = parseFloat(length);
+    if (isNaN(d) || isNaN(l)) return '';
+    const w = (Math.PI * Math.pow(d/2, 2) * l * STEEL_DENSITY / 1000);
+    return Math.round(w * 100) / 100;
+  }
+
+  function calculateLength(diameter, weight) {
+    const d = parseFloat(diameter);
+    const w = parseFloat(weight);
+    if (isNaN(d) || isNaN(w)) return '';
+    const l = ((w * 1000) / (Math.PI * Math.pow(d/2, 2) * STEEL_DENSITY));
+    return Math.round(l * 10) / 10;
+  }
+
+  function calculateDiameter(length, weight) {
+    const l = parseFloat(length);
+    const w = parseFloat(weight);
+    if (isNaN(l) || isNaN(w)) return '';
+    const d = Math.sqrt((w * 1000) / (Math.PI * l * STEEL_DENSITY)) * 2;
+    return Math.round(d * 100) / 100;
+  }
+
+  function handleInputChange(e) {
+    const currentInput = e.target;
+    const currentValue = currentInput.value;
+
+    if (!currentValue) {
+      if (currentInput !== diameterInput) diameterInput.value = '';
+      if (currentInput !== lengthInput) lengthInput.value = '';
+      if (currentInput !== weightInput) weightInput.value = '';
+      return;
+    }
+
+    const hasDiameter = diameterInput.value !== '';
+    const hasLength = lengthInput.value !== '';
+    const hasWeight = weightInput.value !== '';
+
+    if (currentInput === diameterInput) {
+      if (hasLength) weightInput.value = calculateWeight(currentValue, lengthInput.value);
+      else if (hasWeight) lengthInput.value = calculateLength(currentValue, weightInput.value);
+    } else if (currentInput === lengthInput) {
+      if (hasDiameter) weightInput.value = calculateWeight(diameterInput.value, currentValue);
+      else if (hasWeight) diameterInput.value = calculateDiameter(currentValue, weightInput.value);
+    } else if (currentInput === weightInput) {
+      if (hasDiameter) lengthInput.value = calculateLength(diameterInput.value, currentValue);
+      else if (hasLength) diameterInput.value = calculateDiameter(lengthInput.value, currentValue);
+    }
+  }
+
+  diameterInput.addEventListener('input', handleInputChange);
+  lengthInput.addEventListener('input', handleInputChange);
+  weightInput.addEventListener('input', handleInputChange);
+</script>
+
+</body>
+</html>
